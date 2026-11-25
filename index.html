@@ -40,7 +40,24 @@ footer{margin-top:16px;font-size:12px;color:var(--mut);text-align:center;line-he
 @keyframes pop{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
 @keyframes shake{20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(3px)}}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-</style></head><body><script>const STAKE=10,START=100;
+</style></head><body><script>const S=(b,c)=>`<svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="${c||'currentColor'}" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${b}</svg>`;
+const IC={
+fire:S('<path d="M12 3c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3 2-4 .3 1.2 1 2 2 2-.5-3 .2-5.5 1-8z" fill="rgba(255,120,50,.35)"/>'),
+water:S('<path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z" fill="rgba(80,170,255,.35)"/><path d="M9 14a3 3 0 0 0 3 3"/>'),
+earth:S('<path d="M3 19l6-11 4 6 3-4 5 9z" fill="rgba(190,140,90,.35)"/>'),
+air:S('<path d="M3 9h11a3 3 0 1 0-3-3"/><path d="M3 14h15a3 3 0 1 1-3 3"/><path d="M3 19h6"/>'),
+storm:S('<path d="M13 2L5 14h6l-1 8 9-13h-6z" fill="rgba(255,225,80,.4)"/>'),
+frost:S('<path d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7"/><path d="M9.5 3.5L12 6l2.5-2.5M9.5 20.5L12 18l2.5 2.5"/>'),
+light:S('<circle cx="12" cy="12" r="4.2" fill="rgba(255,215,120,.45)"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>'),
+shadow:S('<path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z" fill="rgba(160,130,255,.35)"/>'),
+metal:S('<path d="M12 3l7.5 4.3v8.4L12 20l-7.5-4.3V7.3z" fill="rgba(200,208,220,.3)"/><circle cx="12" cy="11.5" r="3"/>'),
+wood:S('<path d="M5 19C5 9 11 4 20 4c0 9-5 15-15 15z" fill="rgba(100,220,130,.35)"/><path d="M5 19L14 10"/>'),
+wave:S('<path d="M2 10c2.5-3 5-3 7.5 0S14.5 13 17 10s3-2.5 5-1.5"/><path d="M2 16c2.5-3 5-3 7.5 0s5 3 7.5 0 3-2.5 5-1.5" opacity=".7"/>'),
+ship:S('<path d="M3 15h18l-3 5H6z" fill="rgba(255,180,84,.45)"/><path d="M12 15V4l6 6h-6"/><path d="M12 4l-5 7h5" />'),
+boom:S('<path d="M12 2l2 5 5-2-2 5 5 2-5 2 2 5-5-2-2 5-2-5-5 2 2-5-5-2 5-2-2-5 5 2z" fill="rgba(255,120,60,.55)"/>'),
+splash:S('<path d="M4 17c2-2 3-2 5 0s3 2 5 0 3-2 5 0"/><path d="M8 13l-1-5M12 12V5M16 13l1-5"/>'),
+gem:S('<path d="M6 4h12l4 6-10 11L2 10z" fill="rgba(61,224,255,.35)"/><path d="M2 10h20M9 4l-2 6 5 11 5-11-2-6"/>')};
+const STAKE=10,START=100;
 function randInt(n){const lim=Math.floor(0x100000000/n)*n,b=new Uint32Array(1);do{crypto.getRandomValues(b)}while(b[0]>=lim);return b[0]%n}
 function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=randInt(i+1);[a[i],a[j]]=[a[j],a[i]]}return a}
 const $=s=>document.querySelector(s);
@@ -65,7 +82,7 @@ document.body.innerHTML=`<canvas id="bg"></canvas><div class="wrap">
 <div class="stage" id="stage">${o.stage}<div id="result" class="result" style="display:none"></div><div class="actions" id="actions"></div><div class="hint" id="hint"></div><div class="hist" id="hist"></div><div class="note" id="brk" style="display:none">Good time for a break. Nothing is owed and nothing carries over.</div></div>
 <details><summary>Rules and fairness</summary>${o.rules}<p>Randomness comes from your browser's secure random generator. Each round is independent: past results never change the next one. Credits have no cash value. There are no deposits, withdrawals or prizes. Balance resets when you reload.</p></details>
 <div class="actions"><button class="btn ghost" id="resetBtn" type="button">Reset credits</button></div>
-<footer>Free demo for fun. The 70% admin edge is shown openly, so expect to lose more than you win.</footer></div>`;
+<footer>Free demo for fun. The admin wins 70% of rounds, shown openly, so expect to lose more often than you win.</footer></div>`;
 $('#resetBtn').onclick=resetBank;paintBank();}
 function setActions(list){const a=$('#actions');a.innerHTML='';list.forEach(([label,fn,cls,dis])=>{const b=document.createElement('button');b.type='button';b.className='btn '+(cls||'');b.textContent=label;b.disabled=!!dis;b.onclick=fn;a.appendChild(b)})}
 /* ambient particle background */
@@ -86,7 +103,7 @@ const css=document.createElement('style');css.textContent=`
 .sea{position:relative;width:min(100%,520px);aspect-ratio:1;margin:0 auto}
 #radar{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;background:radial-gradient(circle,#06324a,#031018);border:2px solid #2aa9c9;box-shadow:0 0 40px rgba(42,169,201,.35) inset,0 0 30px rgba(42,169,201,.2)}
 .cell{position:absolute;width:19%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;border:2px solid rgba(123,224,255,.6);background:radial-gradient(circle at 35% 30%,rgba(123,224,255,.35),rgba(3,20,32,.85));color:#dff6ff;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s}
-.cell span{font-size:clamp(18px,6vw,32px);line-height:1}.cell small{font-size:11px;opacity:.8}
+.cell span{font-size:clamp(20px,6.5vw,34px);line-height:1;display:flex}.cell small{font-size:11px;opacity:.8}
 .cell:hover:not(:disabled){transform:translate(-50%,-50%) scale(1.1);box-shadow:0 0 22px #7be0ff}
 .cell.ship{border-color:#ffb454;box-shadow:0 0 22px #ffb454;background:radial-gradient(circle,#5a3a10,#1a0f04)}
 .cell.hit{border-color:#7cf0c8;box-shadow:0 0 0 3px #7cf0c8,0 0 34px #7cf0c8;background:radial-gradient(circle,#0f5a45,#04140f)}
@@ -100,14 +117,14 @@ const cv=$('#radar'),cx=cv.getContext('2d');let ang=0;
  cx.beginPath();cx.moveTo(320,10);cx.lineTo(320,630);cx.moveTo(10,320);cx.lineTo(630,320);cx.stroke();
  const g=cx.createConicGradient(ang,320,320);g.addColorStop(0,'rgba(80,255,200,.45)');g.addColorStop(.12,'rgba(80,255,200,0)');g.addColorStop(1,'rgba(80,255,200,0)');cx.fillStyle=g;cx.beginPath();cx.arc(320,320,314,0,6.283);cx.fill();ang+=.025;requestAnimationFrame(sweep)})();
 const cells=$('#cells');
-for(let i=0;i<N;i++){const a=(i*36-90)*Math.PI/180;const b=document.createElement('button');b.type='button';b.className='cell';b.style.cssText=`left:${50+39*Math.cos(a)}%;top:${50+39*Math.sin(a)}%`;b.innerHTML=`<span>🌊</span><small>${i+1}</small>`;b.setAttribute('aria-label','Fire at cell '+(i+1));b.onclick=()=>fire(i);cells.appendChild(b)}
+for(let i=0;i<N;i++){const a=(i*36-90)*Math.PI/180;const b=document.createElement('button');b.type='button';b.className='cell';b.style.cssText=`left:${50+39*Math.cos(a)}%;top:${50+39*Math.sin(a)}%`;b.innerHTML=`<span>${IC.wave}</span><small>${i+1}</small>`;b.setAttribute('aria-label','Fire at cell '+(i+1));b.onclick=()=>fire(i);cells.appendChild(b)}
 async function fire(i){if(busy||ship||!canPlay())return;busy=true;const st=randInt(N);ship=[st,(st+1)%N,(st+2)%N];shot=i;const win=ship.includes(i);
  [...cells.children].forEach(c=>c.disabled=true);const el=cells.children[i];const r=document.createElement('div');r.className='ring';r.style.left=el.style.left;r.style.top=el.style.top;$('#sea').appendChild(r);
  $('#ctr').innerHTML='Shell away...';await sleep(750);
- ship.forEach(k=>{cells.children[k].classList.add('ship');cells.children[k].firstChild.textContent='🚢'});
- if(win){el.classList.add('hit','boom');el.firstChild.textContent='💥'}else{el.classList.add('miss');el.firstChild.textContent='💦'}
+ ship.forEach(k=>{cells.children[k].classList.add('ship');cells.children[k].firstChild.innerHTML=IC.ship});
+ if(win){el.classList.add('hit','boom');el.firstChild.innerHTML=IC.boom}else{el.classList.add('miss');el.firstChild.innerHTML=IC.splash}
  $('#ctr').innerHTML=win?'Direct hit.':'Open water.<br>Ship was on '+ship.map(k=>k+1).join(', ');
  settle(win);showResult(win,win?'Your shot landed on the ship.':'Your shot landed in open water.');busy=false;setActions([['New round',next]]);$('#hint').textContent=''}
-function next(){ship=null;shot=null;$('#result').style.display='none';[...cells.children].forEach(c=>{c.className='cell';c.disabled=false;c.firstChild.textContent='🌊'});$('#ctr').innerHTML='Tap a cell<br>to fire';setActions([]);$('#hint').textContent=`Firing costs ${STAKE} credits.`}
+function next(){ship=null;shot=null;$('#result').style.display='none';[...cells.children].forEach(c=>{c.className='cell';c.disabled=false;c.firstChild.innerHTML=IC.wave});$('#ctr').innerHTML='Tap a cell<br>to fire';setActions([]);$('#hint').textContent=`Firing costs ${STAKE} credits.`}
 window.onReset=next;next();
 </script></body></html>
